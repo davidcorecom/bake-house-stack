@@ -61,7 +61,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          role-session-name: gha-cdk-joshua-hilarion-${{ github.run_id }}-${{ github.run_attempt }}
+          role-session-name: gha-cdk-david-carr-${{ github.run_id }}-${{ github.run_attempt }}
           aws-region: ${{ env.AWS_REGION }}
  
       - name: Verify AWS identity and session
