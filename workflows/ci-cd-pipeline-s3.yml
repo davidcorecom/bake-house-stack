@@ -2,7 +2,7 @@ name: Deploy to S3 via OIDC
 
 on:
   push:
-    branches: [GH-Actions]
+    branches: [main]
 
 permissions:
   id-token: write
@@ -10,16 +10,13 @@ permissions:
 
 env:
   AWS_REGION: eu-west-2
-  S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
   AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   deploy:
-    name: Upload to S3
     runs-on: ubuntu-latest
     
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
@@ -35,13 +32,12 @@ jobs:
       - name: Show assumed AWS identity
         run: aws sts get-caller-identity
 
-      - name: Upload index.html to S3
-        run: |
-          aws s3 cp ./src/index.html s3://${{ env.S3_BUCKET }}/index.html \
-            --content-type "text/html" \
-            --cache-control "no-cache"
+      - name: Install dependencies
+        run: ./aws-iac-07-dynamoDB/solution/bakehouse-app/install.sh
+
+      - name: cdk deploy
+        run: npx cdk deploy
 
       - name: Print deployed URL
         run: |
           echo "✅ Deployment complete!"
-          echo "🌍 http://${{ env.S3_BUCKET }}.s3-website.${{ env.AWS_REGION }}.amazonaws.com"
