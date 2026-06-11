@@ -75,7 +75,7 @@ jobs:
           ROLE_SESSION="$(echo "${IDENTITY}" | jq -r '.Arn' | grep -oE '[^/]+$')"
           echo "Current session: ${ROLE_SESSION}"
  
-          EXPECTED_SESSION="gha-cdk-joshua-hilarion-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          EXPECTED_SESSION="gha-cdk-david-carr-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           if [ "$ROLE_SESSION" != "$EXPECTED_SESSION" ]; then
             echo "::error::Expected role session $EXPECTED_SESSION but got $ROLE_SESSION"
             exit 1
