@@ -1,0 +1,47 @@
+name: Deploy to S3 via OIDC
+
+on:
+  push:
+    branches: [GH-Actions]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+  S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+  AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  deploy:
+    name: Upload to S3
+    runs-on: ubuntu-latest
+    
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+    
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: s3-deploy-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Show assumed AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Upload index.html to S3
+        run: |
+          aws s3 cp ./src/index.html s3://${{ env.S3_BUCKET }}/index.html \
+            --content-type "text/html" \
+            --cache-control "no-cache"
+
+      - name: Print deployed URL
+        run: |
+          echo "✅ Deployment complete!"
+          echo "🌍 http://${{ env.S3_BUCKET }}.s3-website.${{ env.AWS_REGION }}.amazonaws.com"
