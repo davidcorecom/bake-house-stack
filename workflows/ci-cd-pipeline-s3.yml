@@ -33,10 +33,12 @@ jobs:
         run: aws sts get-caller-identity
 
       - name: Install dependencies
-        run: ./aws-iac-07-dynamoDB/solution/bakehouse-app/install.sh
+        working-directory: ./aws-iac-07-dynamoDB/solution/bakehouse-app
+        run: ./install.sh
 
-      - name: cdk deploy
-        run: npx cdk deploy
+      - name: CDK deploy
+        working-directory: ./aws-iac-07-dynamoDB/solution/bakehouse-app
+        run: npx cdk deploy --require-approval never
 
       - name: Print deployed URL
         run: |
