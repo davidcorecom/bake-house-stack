@@ -78,6 +78,37 @@ export class BakehouseStack extends Stack {
 
     iam.PermissionsBoundary.of(this).apply(boundary)
 
+        // ----------------------------------
+    // GitHub Actions OIDC deploy role
+    // ----------------------------------
+    const githubOrg = props.githubOrg || 'davidcorecom'
+    const githubRepo = props.githubRepo || 'bake-house-stack'
+    const githubRefFilter = props.githubRefFilter || 'ref:refs/heads/main' //ref any branches being used
+    const githubOidcProvider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
+      this,
+      'github-oidc-provider',
+      `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`
+    )
+    const githubActionsDeployRole = new iam.Role(this, 'github-actions-deploy-role', {
+      roleName: 'github-actions-david-carr-bakehouse',
+      assumedBy: new iam.WebIdentityPrincipal(
+        githubOidcProvider.openIdConnectProviderArn,
+        {
+          StringEquals: {
+            'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com'
+          },
+          StringLike: {
+            'token.actions.githubusercontent.com:sub': `repo:${githubOrg}/${githubRepo}:${githubRefFilter}`
+          }
+        }
+      ),
+      description: `Assumed by GitHub Actions for ${githubOrg}/${githubRepo}`,
+      maxSessionDuration: cdk.Duration.hours(1)
+    })
+    githubActionsDeployRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')
+    )
+
     // ----------------------------------
     // Networking
     // ----------------------------------
@@ -600,6 +631,10 @@ export class BakehouseStack extends Stack {
 
     new cdk.CfnOutput(this, 'LoginLambdaName', {
       value: loginLambda.functionName,
+    })
+
+    new cdk.CfnOutput(this, 'GitHubActionOIDCRole', {
+      value: githubActionsDeployRole.roleArn,
     })
   }
 }
